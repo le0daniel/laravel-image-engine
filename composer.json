@@ -1,0 +1,28 @@
+{
+  "name": "le0daniel/laravel-image-engine",
+  "description": "Integration of automatic image manipulation and serving",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Leo Daniel Studer",
+      "email": "leo.studer@nitrosoft.ch"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "le0daniel\\Laravel\\ImageEngine\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "le0daniel\\Laravel\\ImageEngine\\ImageEngineProvider"
+      ]
+    }
+  },
+  "require": {
+    "php": "^7.2",
+    "laravel/framework": "^5.6||^6",
+    "intervention/image": "^2.5"
+  }
+}
