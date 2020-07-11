@@ -107,7 +107,7 @@ final class ImageEngine
     public function serializeImage(ImageRepresentation $imageRepresentation): array
     {
         $signature = Signatures::sign($this->secret, $imageRepresentation->serialize());
-        return Strings::splitAtIndex($signature, 20);
+        return explode('::', $signature, 2);
     }
 
     public function getImageSignedString(string $signedString): ImageRepresentation

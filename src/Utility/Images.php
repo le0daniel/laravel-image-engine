@@ -49,7 +49,7 @@ final class Images
         }
 
         $baseCachePath = config('image-engine.original_cache_dir');
-        [$folder, $name] = Strings::splitAtIndex(md5($imageRepresentation->filePath), 20);
+        [$folder, $name] = Strings::splitAtIndex(md5($imageRepresentation->filePath), 6);
         $cacheFilePath = "{$baseCachePath}/{$folder}/{$name}.{$imageRepresentation->extension}";
 
         Directories::makeRecursive(dirname($cacheFilePath));

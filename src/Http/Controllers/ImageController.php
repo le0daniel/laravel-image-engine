@@ -36,7 +36,7 @@ class ImageController extends BaseController
     public function image(string $folder, string $path, string $extension)
     {
         try {
-            $imageRepresentation = $this->imageEngine->getImageSignedString($folder . $path);
+            $imageRepresentation = $this->imageEngine->getImageSignedString($folder . '::' . $path);
             if ($imageRepresentation->isExpired) {
                 return $this->expired();
             }
