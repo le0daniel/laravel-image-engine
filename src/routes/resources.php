@@ -12,7 +12,7 @@ use le0daniel\Laravel\ImageEngine\Http\Controllers\ImageController;
     ->where(
         [
             'folder' => '[a-zA-Z0-9\_\-]+',
-            'path' => '[a-zA-Z0-9\_\-]+',
+            'path' => '[a-zA-Z0-9\_\-]+::[a-zA-Z0-9\_\-]+',
             'extension' => '(jpg|jpeg|png)',
         ]
     )

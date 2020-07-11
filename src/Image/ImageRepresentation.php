@@ -99,6 +99,8 @@ final class ImageRepresentation
                 return pathinfo($this->filePath, PATHINFO_EXTENSION);
             case 'isConfidential':
                 return (bool)$this->expires;
+            case 'expiresCarbon':
+                return $this->isConfidential ? Carbon::createFromTimestamp($this->expires) : null;
             case 'isExpired':
                 return $this->isConfidential ? $this->expiresCarbon->isPast() : false;
         }
