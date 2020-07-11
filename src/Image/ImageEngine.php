@@ -11,6 +11,9 @@ namespace le0daniel\Laravel\ImageEngine\Image;
 use Illuminate\Support\Str;
 use Intervention\Image\Constraint;
 use Intervention\Image\ImageManager;
+use le0daniel\Laravel\ImageEngine\Contract\ImageManipulator;
+use le0daniel\Laravel\ImageEngine\Image\Manipulator\Fit;
+use le0daniel\Laravel\ImageEngine\Image\Manipulator\Resize;
 use le0daniel\Laravel\ImageEngine\Utility\Directories;
 use le0daniel\Laravel\ImageEngine\Utility\Images;
 use le0daniel\Laravel\ImageEngine\Utility\Signatures;
@@ -20,8 +23,6 @@ final class ImageEngine
 {
     private const IMAGE_RESIZE_DIMENSIONS_TO_FIT = 3000;
 
-    private array $sizes;
-    private array $filters = [];
     private string $secret;
     private string $tmpPath;
     private ImageManager $imageManager;
@@ -29,7 +30,6 @@ final class ImageEngine
     public function __construct(ImageManager $imageManager)
     {
         $this->imageManager = $imageManager;
-        $this->sizes = config('image-engine.sizes');
         $this->secret = config('image-engine.key');
         $this->tmpPath = rtrim(config('image-engine.tmp_directory'), '/');
     }
@@ -43,49 +43,19 @@ final class ImageEngine
         return rtrim($basePath, '/');
     }
 
-    /**
-     * @param string $size
-     * @return array
-     * @throws ImageException
-     */
-    private function getSizeArray(string $size): array
+    private function getConfiguration(string $size): array
     {
-        if (!array_key_exists($size, $this->sizes)) {
-            throw ImageException::withHint(
-                'Invalid size.',
-                "Given {$size}, available: " . implode(', ', array_keys($this->sizes))
-            );
+        $configuration = config('image-engine.sizes', [])[$size] ?? null;
+        if (!$configuration) {
+            throw ImageException::withHint("Invalid size given: {$size}", 'Please provide a configured size.');
         }
 
         return [
-            $this->sizes[$size][0],
-            $this->sizes[$size][1],
-            $this->sizes[$size][2] ?? false,
+            $configuration[$size][0],
+            $configuration[$size][1],
+            $configuration[$size][2] ?? false,
+            $configuration[$size]['manipulation'] ?? null,
         ];
-    }
-
-    private function applyFilters(\Intervention\Image\Image $image, string $size)
-    {
-        if (!array_key_exists($size, $this->filters)) {
-            return;
-        }
-
-        /* Loop through filters */
-        foreach ($this->filters[$size] as $filter => $params) {
-            /* No params given */
-            if (is_numeric($filter)) {
-                $filter = $params;
-                $params = [];
-            }
-
-            /* Cast single params as array */
-            if (!is_array($params)) {
-                $params = [$params];
-            }
-
-            /* Apply filter */
-            $image->{$filter}(...$params);
-        }
     }
 
     private function getAbsoluteRenderPath(
@@ -132,10 +102,7 @@ final class ImageEngine
         if (file_exists($absoluteRenderPath)) {
             return $absoluteRenderPath;
         }
-
-        if (!file_exists(dirname($absoluteRenderPath))) {
-            Directories::makeRecursive(dirname($absoluteRenderPath));
-        }
+        Directories::makeRecursive(dirname($absoluteRenderPath));
 
         // Original requested
         if (Images::isOriginalSize($imageRepresentation->size)) {
@@ -143,34 +110,20 @@ final class ImageEngine
             return $absoluteRenderPath;
         }
 
-        [$x, $y, $fit] = $this->getSizeArray($imageRepresentation->size);
+        [$x, $y, $fit, $userProvidedManipulators] = $this->getConfiguration($imageRepresentation->size);
 
-        $image = $this
-            ->imageManager
-            ->make(Images::realPath($imageRepresentation));
+        $image = $this->imageManager->make(Images::realPath($imageRepresentation));
 
-        /* Resize the image */
-        if ($fit) {
-            $image->fit(
-                $x,
-                $y,
-                static function (Constraint $constraint) {
-                    $constraint->upsize();
-                }
-            );
-        } else {
-            $image->resize(
-                $x,
-                $y,
-                static function (Constraint $constraint) {
-                    $constraint->aspectRatio();
-                    $constraint->upsize();
-                }
-            );
+        $manipulators = [
+            $fit ? new Fit($x, $y) : new Resize($x, $y),
+        ];
+        if ($userProvidedManipulators) {
+            foreach ($userProvidedManipulators as $manipulator) {
+                $manipulators[] = new $manipulator;
+            }
         }
 
-        /* Add Filters */
-        $this->applyFilters($image, $imageRepresentation->size);
+        array_walk($manipulators, fn(ImageManipulator $manipulator) => $manipulator->handle($image));
 
         /* Save */
         $image->save($absoluteRenderPath);
