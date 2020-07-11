@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 use le0daniel\Laravel\ImageEngine\Image\Image;
+use le0daniel\Laravel\ImageEngine\Image\ImageRepresentation;
 
 class ImageUrl extends Command
 {
@@ -34,15 +35,16 @@ class ImageUrl extends Command
         $disk = $this->argument('disk');
         $extension = $this->argument('extension');
 
-        $image = new Image(
+        $image = ImageRepresentation::from(
             $path,
             $size,
             Carbon::now()->addMinutes(10),
             $disk
         );
 
-        if (!Storage::disk($disk)->exists($path)) {
-            return $this->line('Image not found. Path ' . $path . ' on disk ' . $disk, 'error');
+        if (!$image->disk()->exists($path)) {
+            $this->line('Image not found. Path ' . $path . ' on disk ' . $disk, 'error');
+            return;
         }
 
         if (!$extension) {

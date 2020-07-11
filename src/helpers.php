@@ -6,49 +6,32 @@
  * Time: 13:41
  */
 
+use Illuminate\Support\Facades\URL;
+use le0daniel\Laravel\ImageEngine\Image\ImageEngine;
+use le0daniel\Laravel\ImageEngine\Image\ImageRepresentation;
+
 if (!function_exists('image_url')) {
-
-    /**
-     * Returns the signed url of an image.
-     * Important, this does not render the image.
-     *
-     * @param \le0daniel\Laravel\ImageEngine\Image\Image $image
-     * @param string $extension
-     * @return string
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException|Exception
-     */
-    function image_url(\le0daniel\Laravel\ImageEngine\Image\Image $image, string $extension): string
+    function image_url(ImageRepresentation $image, string $extension): string
     {
-        $signer = app()->make(\le0daniel\Laravel\ImageEngine\Image\Signer::class);
-        list($payload, $signature) = $signer->signPayload($image->toPayload());
-
-        return \Illuminate\Support\Facades\URL::route('image-engine.image', [
-            'payload' => $payload,
-            'signature' => $signature,
-            'extension' => $extension
-        ]);
+        [$folder, $path] = app()->make(ImageEngine::class)->serializeImage($image);
+        return URL::route(
+            'image-engine.image',
+            [
+                'folder' => $folder,
+                'path' => $path,
+                'extension' => $extension,
+            ]
+        );
     }
 }
 
 if (!function_exists('image_real_path')) {
-
-    /**
-     * Render an image and return it's local path on disk
-     *
-     * @param \le0daniel\Laravel\ImageEngine\Image\Image $image
-     * @param string $extension
-     * @param bool $confidential
-     * @return string
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
-     * @throws \le0daniel\Laravel\ImageEngine\Image\ImageException
-     */
-    function image_real_path(\le0daniel\Laravel\ImageEngine\Image\Image $image, string $extension, bool $confidential = true): string
+    function image_real_path(ImageRepresentation $image, string $extension, bool $confidential = true): string
     {
-        /** @var \le0daniel\Laravel\ImageEngine\Image\Renderer $renderer */
-        $renderer = app()->make(\le0daniel\Laravel\ImageEngine\Image\Renderer::class);
-
-        return $renderer->render(
-            $image, $extension, $confidential
+        return app()->make(ImageEngine::class)->render(
+            $image,
+            $extension,
+            $confidential
         );
     }
 }

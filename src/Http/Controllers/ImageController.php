@@ -8,78 +8,65 @@
 
 namespace le0daniel\Laravel\ImageEngine\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
-use le0daniel\Laravel\ImageEngine\Image\Image;
+use Illuminate\Support\Facades\Log;
 use le0daniel\Laravel\ImageEngine\Image\ImageException;
-use le0daniel\Laravel\ImageEngine\Image\Renderer;
-use le0daniel\Laravel\ImageEngine\Image\Signer;
+use le0daniel\Laravel\ImageEngine\Image\ImageEngine;
+use le0daniel\Laravel\ImageEngine\Utility\SignatureException;
 
 class ImageController extends BaseController
 {
-    /**
-     * @var Signer
-     */
-    protected $signer;
+    private ImageEngine $imageEngine;
 
-    /**
-     * @var Renderer
-     */
-    protected $renderer;
-
-    /**
-     * ImageController constructor.
-     * @param Signer $signer
-     * @param Renderer $renderer
-     */
-    public function __construct(Signer $signer, Renderer $renderer)
+    public function __construct(ImageEngine $imageEngine)
     {
-        $this->signer = $signer;
-        $this->renderer = $renderer;
+        $this->imageEngine = $imageEngine;
     }
 
+    private function expired()
+    {
+        return response()->json(
+            [
+                'error' => 'Expired'
+            ],
+            410
+        );
+    }
 
-    /**
-     * @param string $unverifiedPayload
-     * @param string $signature
-     * @param string $extension
-     * @return \Illuminate\Http\JsonResponse|\Symfony\Component\HttpFoundation\BinaryFileResponse
-     * @throws \Exception
-     */
-    public function image(string $unverifiedPayload, string $signature, string $extension)
+    public function image(string $folder, string $path, string $extension)
     {
         try {
-            $payload = $this->signer->verifyAndUnpack($unverifiedPayload, $signature);
-        } catch (\Exception $error) {
-            return response()->json([
-                'error' => 'Invalid signature.'
-            ], 403);
-        }
-
-        $image = Image::createFromPayload($payload);
-
-        // Check if expired
-        if ($image->isExpired()) {
-            response()->json([
-                'error' => 'Expired'
-            ], 403);
-        }
-
-        try {
-            return response()->file(
-                $this->renderer->render($image, $extension),
-                $image->cacheControlHeaders()
-            );
-        } catch (ImageException $exception) {
-            if (config('app.debug') === true) {
-                return response()->json([
-                    'error' => $exception->getMessage(),
-                    'hint' => $exception->getHint(),
-                ], 500);
+            $imageRepresentation = $this->imageEngine->getImageSignedString($folder . $path);
+            if ($imageRepresentation->isExpired) {
+                return $this->expired();
             }
-            return response()->json([
-                'error' => 'Invalid request. Forbidden'
-            ], 403);
+
+            $absoluteImagePath = $this->imageEngine->render(
+                $imageRepresentation,
+                $extension,
+                false
+            );
+
+            return response()->file(
+                $absoluteImagePath,
+                $imageRepresentation->cacheControlHeaders()
+            );
+        } catch (SignatureException $signatureException) {
+            Log::error('Image Rendering: ' . $signatureException->getMessage());
+            return response()->json(
+                [
+                    'Error' => 'Invalid signature provided',
+                ],
+                422
+            );
+        } catch (ImageException $error) {
+            Log::error('Image Rendering: ' . $error->getMessage() . ' => ' . $error->getHint());
+            return response()->json(
+                [
+                    'Error' => 'Internal rendering error',
+                ],
+                500
+            );
         }
     }
 

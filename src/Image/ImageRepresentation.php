@@ -3,6 +3,8 @@
 namespace le0daniel\Laravel\ImageEngine\Image;
 
 use Carbon\Carbon;
+use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Storage;
 use le0daniel\Laravel\ImageEngine\Utility\Arrays;
 use le0daniel\Laravel\ImageEngine\Utility\Base64;
 use le0daniel\Laravel\ImageEngine\Utility\Json;
@@ -125,6 +127,11 @@ final class ImageRepresentation
         return $this->__isset($name)
             ? $this->getValue($name, $this->attributes[$name])
             : $this->getValue($name, null);
+    }
+
+    public function disk(): Filesystem
+    {
+        return Storage::disk($this->diskName);
     }
 
     public function toArray()

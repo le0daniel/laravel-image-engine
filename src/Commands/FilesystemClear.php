@@ -10,6 +10,7 @@ namespace le0daniel\Laravel\ImageEngine\Commands;
 
 
 use Illuminate\Console\Command;
+use le0daniel\Laravel\ImageEngine\Utility\Directories;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
 
@@ -152,7 +153,7 @@ class FilesystemClear extends Command
 
         foreach ($this->recreateDirectories() as $directory) {
             if (!file_exists($directory) && !is_dir($directory)) {
-                mkdir($directory, 0777, true);
+                Directories::makeRecursive($directory);
                 $this->line('Made directory: <info>' . $directory . '</info>');
             }
         }

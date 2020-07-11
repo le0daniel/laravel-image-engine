@@ -6,15 +6,14 @@
  * Time: 12:36
  */
 
-\Illuminate\Support\Facades\Route::namespace(
-    'le0daniel\\Laravel\\ImageEngine\\Http\\Controllers'
-)->group(function () {
+use le0daniel\Laravel\ImageEngine\Http\Controllers\ImageController;
 
-    \Illuminate\Support\Facades\Route::get('/img/{payload}/{signature}.{extension}', 'ImageController@image')
-        ->where([
-            'payload' => '[a-zA-Z0-9\.\_\-]+',
-            'signature' => '[a-z0-9]+',
-            'extension' => '(jpg|jpeg|png)'
-        ])
-        ->name('image-engine.image');
-});
+\Illuminate\Support\Facades\Route::get('/img/{folder}/{path}.{extension}', [ImageController::class, 'image'])
+    ->where(
+        [
+            'folder' => '[a-zA-Z0-9\_\-]+',
+            'path' => '[a-zA-Z0-9\_\-]+',
+            'extension' => '(jpg|jpeg|png)',
+        ]
+    )
+    ->name('image-engine.image');
