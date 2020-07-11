@@ -21,8 +21,10 @@
     }
   },
   "require": {
-    "php": "^7.2",
+    "php": "^7.4",
     "laravel/framework": "^7",
-    "intervention/image": "^2.5"
+    "intervention/image": "^2.5",
+    "nesbot/carbon": "^2.36",
+    "ext-json": "*"
   }
 }
