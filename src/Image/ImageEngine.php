@@ -51,10 +51,10 @@ final class ImageEngine
         }
 
         return [
-            $configuration[$size][0],
-            $configuration[$size][1],
-            $configuration[$size][2] ?? false,
-            $configuration[$size]['manipulation'] ?? null,
+            $configuration[0],
+            $configuration[1],
+            $configuration[2] ?? false,
+            $configuration['manipulation'] ?? null,
         ];
     }
 
