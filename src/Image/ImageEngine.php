@@ -204,7 +204,7 @@ final class ImageEngine
 
             $callback($tmpFileName);
         } catch (\Exception $exception) {
-            if (file_exists($tmpFileName)) {
+            if (isset($tmpFileName) && file_exists($tmpFileName)) {
                 unlink($tmpFileName);
             }
             throw $exception;

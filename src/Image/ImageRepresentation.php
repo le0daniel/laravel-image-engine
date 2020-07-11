@@ -151,9 +151,4 @@ final class ImageRepresentation
             Json::encode($this->toArray())
         );
     }
-
-    public function dump()
-    {
-        var_dump($this->attributes);
-    }
 }
