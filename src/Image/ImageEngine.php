@@ -8,6 +8,7 @@
 
 namespace le0daniel\Laravel\ImageEngine\Image;
 
+use Illuminate\Support\Str;
 use Intervention\Image\Constraint;
 use Intervention\Image\ImageManager;
 use le0daniel\Laravel\ImageEngine\Utility\Directories;
@@ -17,9 +18,12 @@ use le0daniel\Laravel\ImageEngine\Utility\Strings;
 
 final class ImageEngine
 {
+    private const IMAGE_RESIZE_DIMENSIONS_TO_FIT = 3000;
+
     private array $sizes;
     private array $filters = [];
     private string $secret;
+    private string $tmpPath;
     private ImageManager $imageManager;
 
     public function __construct(ImageManager $imageManager)
@@ -27,6 +31,7 @@ final class ImageEngine
         $this->imageManager = $imageManager;
         $this->sizes = config('image-engine.sizes');
         $this->secret = config('image-engine.key');
+        $this->tmpPath = rtrim(config('image-engine.tmp_directory'), '/');
     }
 
     private function getBasePath(ImageRepresentation $imageRepresentation, bool $forceConfidential): string
@@ -91,6 +96,12 @@ final class ImageEngine
         $basePath = $this->getBasePath($imageRepresentation, $forceConfidential);
         [$folder, $path] = $this->serializeImage($imageRepresentation);
         return "{$basePath}/{$folder}/{$path}.{$extension}";
+    }
+
+    private function getTmpPath(string $extension)
+    {
+        $randomName = Str::random(20);
+        return "{$this->tmpPath}/{$randomName}.{$extension}";
     }
 
     public function serializeImage(ImageRepresentation $imageRepresentation): array
@@ -167,6 +178,39 @@ final class ImageEngine
         /* Free Memory and return */
         unset($image);
         return $absoluteRenderPath;
+    }
+
+    public function convertUploadedImage(
+        string $absoluteImagePath,
+        string $extension,
+        \Closure $callback,
+        int $imageDimensions = self::IMAGE_RESIZE_DIMENSIONS_TO_FIT
+    ): void {
+        Images::verifyImageExtension($extension);
+        try {
+            $tmpFileName = $this->getTmpPath($extension);
+
+            $image = $this->imageManager->make($absoluteImagePath);
+            $image->resize(
+                $imageDimensions,
+                $imageDimensions,
+                static function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                }
+            );
+            $image->save($tmpFileName);
+            unset($image);
+
+            $callback($tmpFileName);
+        } catch (\Exception $exception) {
+            if (file_exists($tmpFileName)) {
+                unlink($tmpFileName);
+            }
+            throw $exception;
+        }
+
+        unlink($tmpFileName);
     }
 
 }

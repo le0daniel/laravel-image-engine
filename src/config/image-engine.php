@@ -65,4 +65,9 @@ return [
      */
     'original_cache_dir' => storage_path('app/original-images'),
 
+    /**
+     * Path used to create tmp files.
+     */
+    'tmp_directory' => storage_path('tmp'),
+
 ];
