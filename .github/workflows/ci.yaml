@@ -1,0 +1,26 @@
+name: Deploy
+
+on: [push]
+
+jobs:
+    tests:
+        name: Run tests
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v1
+            -   name: Cache composer dependencies
+                uses: actions/cache@v1
+                with:
+                    path: vendor
+                    key: composer-${{ hashFiles('composer.lock') }}
+            -   name: Run composer install
+                run: |
+                    php --version
+                    composer config "http-basic.nova.laravel.com" "${{ secrets.NOVA_USERNAME }}" "${{ secrets.NOVA_PASSWORD }}"
+                    composer install -n --prefer-dist
+                env:
+                    APP_ENV: testing
+            -   name: Run tests
+                run: ./vendor/bin/phpunit
+                env:
+                    APP_ENV: testing
