@@ -106,13 +106,13 @@ final class ImageEngine
 
         // Original requested
         if (Images::isOriginalSize($imageRepresentation->size)) {
-            copy(Images::realPath($imageRepresentation), $absoluteRenderPath);
+            copy(Images::downloadForLocalProcessing($imageRepresentation), $absoluteRenderPath);
             return $absoluteRenderPath;
         }
 
         [$x, $y, $fit, $userProvidedManipulators] = $this->getConfiguration($imageRepresentation->size);
 
-        $image = $this->imageManager->make(Images::realPath($imageRepresentation));
+        $image = $this->imageManager->make(Images::downloadForLocalProcessing($imageRepresentation));
 
         $manipulators = [
             $fit ? new Fit($x, $y) : new Resize($x, $y),

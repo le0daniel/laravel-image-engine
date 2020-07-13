@@ -23,7 +23,7 @@ use le0daniel\Laravel\ImageEngine\Utility\Json;
  * @property-read bool $isConfidential
  * @property-read bool $isExpired
  */
-final class ImageRepresentation
+class ImageRepresentation
 {
     private const DEFAULT_DISK_NAME = 'local';
     private const SERIALIZE_KEY_MAP = [
@@ -33,7 +33,7 @@ final class ImageRepresentation
         'diskName' => 'd',
     ];
     private const IMAGE_CACHE_MAX_AGE = 31557600;
-    private array $attributes;
+    private array $attributes = [];
 
     private function __construct(array $attributes)
     {

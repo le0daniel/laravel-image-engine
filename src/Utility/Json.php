@@ -12,7 +12,7 @@ final class Json
         return json_encode($data, JSON_THROW_ON_ERROR);
     }
 
-    public static function decode(string $data, ?array $defaultValues): array
+    public static function decode(string $data, ?array $defaultValues = null): array
     {
         $data = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
         return $defaultValues

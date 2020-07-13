@@ -38,7 +38,7 @@ final class Images
         return $disk->getDriver()->getAdapter() instanceof Local;
     }
 
-    public static function realPath(ImageRepresentation $imageRepresentation): string
+    public static function downloadForLocalProcessing(ImageRepresentation $imageRepresentation): string
     {
         $disk = $imageRepresentation->disk();
 
