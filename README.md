@@ -1,6 +1,6 @@
 # Laravel Image Engine
 
-![Deploy](https://github.com/le0daniel/laravel-image-engine/workflows/Tests/badge.svg)
+![Tests](https://github.com/le0daniel/laravel-image-engine/workflows/Tests/badge.svg?event=push)
 
 Powerful Image engine for Laravel. Don't waste your time, writing logic to resize and transform images.
 
