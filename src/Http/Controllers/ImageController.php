@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use le0daniel\Laravel\ImageEngine\Image\ImageException;
 use le0daniel\Laravel\ImageEngine\Image\ImageEngine;
 use le0daniel\Laravel\ImageEngine\Utility\SignatureException;
+use le0daniel\Laravel\ImageEngine\Utility\Signatures;
 
 class ImageController extends BaseController
 {
@@ -36,7 +37,7 @@ class ImageController extends BaseController
     public function image(string $folder, string $path, string $extension)
     {
         try {
-            $imageRepresentation = $this->imageEngine->getImageSignedString($folder . '::' . $path);
+            $imageRepresentation = $this->imageEngine->getImageFromSignedString($folder . Signatures::SIGNATURE_STRING_SEPARATOR . $path);
             if ($imageRepresentation->isExpired) {
                 return $this->expired();
             }

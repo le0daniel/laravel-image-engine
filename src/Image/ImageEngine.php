@@ -27,11 +27,11 @@ final class ImageEngine
     private string $tmpPath;
     private ImageManager $imageManager;
 
-    public function __construct(ImageManager $imageManager)
+    public function __construct(ImageManager $imageManager, string $secret, string $tmpPath)
     {
         $this->imageManager = $imageManager;
-        $this->secret = config('image-engine.key');
-        $this->tmpPath = rtrim(config('image-engine.tmp_directory'), '/');
+        $this->secret = $secret;
+        $this->tmpPath = rtrim($tmpPath, '/');
     }
 
     private function getBasePath(ImageRepresentation $imageRepresentation, bool $forceConfidential): string
@@ -64,7 +64,7 @@ final class ImageEngine
         bool $forceConfidential
     ): string {
         $basePath = $this->getBasePath($imageRepresentation, $forceConfidential);
-        [$folder, $path] = $this->serializeImage($imageRepresentation);
+        [$folder, $path] = $this->serializeAndSignImage($imageRepresentation);
         return "{$basePath}/{$folder}/{$path}.{$extension}";
     }
 
@@ -74,13 +74,13 @@ final class ImageEngine
         return "{$this->tmpPath}/{$randomName}.{$extension}";
     }
 
-    public function serializeImage(ImageRepresentation $imageRepresentation): array
+    public function serializeAndSignImage(ImageRepresentation $imageRepresentation): array
     {
         $signature = Signatures::sign($this->secret, $imageRepresentation->serialize());
-        return explode('::', $signature, 2);
+        return explode(Signatures::SIGNATURE_STRING_SEPARATOR, $signature, 2);
     }
 
-    public function getImageSignedString(string $signedString): ImageRepresentation
+    public function getImageFromSignedString(string $signedString): ImageRepresentation
     {
         $payload = Signatures::verifyAndReturnPayloadString($this->secret, $signedString);
         return ImageRepresentation::fromSerialized($payload);

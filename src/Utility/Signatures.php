@@ -4,18 +4,19 @@ namespace le0daniel\Laravel\ImageEngine\Utility;
 
 final class Signatures
 {
-    private const SIGNATURE_REGEX = '/^[^:]*::[a-zA-Z0-9\-\_]+$/';
+    public const SIGNATURE_STRING_SEPARATOR = '::';
+    private const SIGNATURE_REGEX = '/^[^:]*' . self::SIGNATURE_STRING_SEPARATOR . '[a-zA-Z0-9\-\_]+$/';
 
     public static function sign(string $secret, string $stringToSign): string
     {
         $signature = self::calculateSignature($secret, $stringToSign);
-        return $stringToSign . '::' . Base64::urlEncode($signature);
+        return $stringToSign . self::SIGNATURE_STRING_SEPARATOR . Base64::urlEncode($signature);
     }
 
     public static function verifyAndReturnPayloadString(string $secret, string $signedString): string
     {
         self::verifyStructure($signedString);
-        [$payload, $userProvidedSignature] = explode('::', $signedString, 2);
+        [$payload, $userProvidedSignature] = explode(self::SIGNATURE_STRING_SEPARATOR, $signedString, 2);
         self::verifySignature($secret, $payload, $userProvidedSignature);
         return $payload;
     }

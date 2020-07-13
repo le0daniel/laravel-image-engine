@@ -42,7 +42,8 @@ class ImageUrl extends Command
             $disk
         );
 
-        if (!$image->disk()->exists($path)) {
+        $disk = Storage::disk($image->diskName);
+        if (!$disk->exists($path)) {
             $this->line('Image not found. Path ' . $path . ' on disk ' . $disk, 'error');
             return;
         }

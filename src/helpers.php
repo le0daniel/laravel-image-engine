@@ -13,7 +13,7 @@ use le0daniel\Laravel\ImageEngine\Image\ImageRepresentation;
 if (!function_exists('image_url')) {
     function image_url(ImageRepresentation $image, string $extension): string
     {
-        [$folder, $path] = app()->make(ImageEngine::class)->serializeImage($image);
+        [$folder, $path] = app()->make(ImageEngine::class)->serializeAndSignImage($image);
         return URL::route(
             'image-engine.image',
             [

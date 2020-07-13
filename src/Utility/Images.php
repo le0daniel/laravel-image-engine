@@ -40,7 +40,7 @@ final class Images
 
     public static function downloadForLocalProcessing(ImageRepresentation $imageRepresentation): string
     {
-        $disk = $imageRepresentation->disk();
+        $disk = Storage::disk($imageRepresentation->diskName);
 
         // Return path from local disk
         if (self::isLocalDisk($disk)) {

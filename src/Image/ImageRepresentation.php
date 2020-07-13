@@ -25,7 +25,7 @@ use le0daniel\Laravel\ImageEngine\Utility\Json;
  */
 class ImageRepresentation
 {
-    private const DEFAULT_DISK_NAME = 'local';
+    public const DEFAULT_DISK_NAME = 'local';
     private const SERIALIZE_KEY_MAP = [
         'filePath' => 'p',
         'size' => 's',
@@ -129,11 +129,6 @@ class ImageRepresentation
         return $this->__isset($name)
             ? $this->getValue($name, $this->attributes[$name])
             : $this->getValue($name, null);
-    }
-
-    public function disk(): Filesystem
-    {
-        return Storage::disk($this->diskName);
     }
 
     public function toArray()
