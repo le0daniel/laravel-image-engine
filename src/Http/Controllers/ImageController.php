@@ -14,6 +14,7 @@ use le0daniel\Laravel\ImageEngine\Image\ImageException;
 use le0daniel\Laravel\ImageEngine\Image\ImageEngine;
 use le0daniel\Laravel\ImageEngine\Utility\SignatureException;
 use le0daniel\Laravel\ImageEngine\Utility\Signatures;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ImageController extends BaseController
 {
@@ -48,8 +49,9 @@ class ImageController extends BaseController
                 false
             );
 
-            return response()->file(
-                $absoluteImagePath,
+            return new BinaryFileResponse(
+                new \SplFileInfo($absoluteImagePath),
+                200,
                 $imageRepresentation->cacheControlHeaders()
             );
         } catch (SignatureException $signatureException) {

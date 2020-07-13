@@ -93,7 +93,7 @@ class ImageRepresentation
         switch ($name) {
             case 'timestamp':
                 return $this->expires;
-            case 'disk':
+            case 'diskName':
                 return $value ?? self::DEFAULT_DISK_NAME;
             case 'extension':
                 return pathinfo($this->filePath, PATHINFO_EXTENSION);
