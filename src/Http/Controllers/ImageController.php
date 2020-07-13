@@ -8,15 +8,15 @@
 
 namespace le0daniel\Laravel\ImageEngine\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Support\Facades\Log;
 use le0daniel\Laravel\ImageEngine\Image\ImageException;
 use le0daniel\Laravel\ImageEngine\Image\ImageEngine;
 use le0daniel\Laravel\ImageEngine\Utility\SignatureException;
 use le0daniel\Laravel\ImageEngine\Utility\Signatures;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-class ImageController extends BaseController
+final class ImageController extends BaseController
 {
     private ImageEngine $imageEngine;
 
@@ -25,20 +25,22 @@ class ImageController extends BaseController
         $this->imageEngine = $imageEngine;
     }
 
-    private function expired()
+    private function jsonResponse(array $data, int $statusCode = 200): JsonResponse
     {
-        return response()->json(
-            [
-                'error' => 'Expired'
-            ],
-            410
-        );
+        return new JsonResponse($data, $statusCode);
+    }
+
+    private function expired(): JsonResponse
+    {
+        return $this->jsonResponse(['error' => 'Expired',], 410);
     }
 
     public function image(string $folder, string $path, string $extension)
     {
         try {
-            $imageRepresentation = $this->imageEngine->getImageFromSignedString($folder . Signatures::SIGNATURE_STRING_SEPARATOR . $path);
+            $imageRepresentation = $this->imageEngine->getImageFromSignedString(
+                $folder . Signatures::SIGNATURE_STRING_SEPARATOR . $path
+            );
             if ($imageRepresentation->isExpired) {
                 return $this->expired();
             }
@@ -55,21 +57,9 @@ class ImageController extends BaseController
                 $imageRepresentation->cacheControlHeaders()
             );
         } catch (SignatureException $signatureException) {
-            Log::error('Image Rendering: ' . $signatureException->getMessage());
-            return response()->json(
-                [
-                    'Error' => 'Invalid signature provided',
-                ],
-                422
-            );
+            return $this->jsonResponse(['error' => 'Invalid signature provided'], 422);
         } catch (ImageException $error) {
-            Log::error('Image Rendering: ' . $error->getMessage() . ' => ' . $error->getHint());
-            return response()->json(
-                [
-                    'Error' => 'Internal rendering error',
-                ],
-                500
-            );
+            return $this->jsonResponse(['error' => 'Internal rendering error'], 500);
         }
     }
 
