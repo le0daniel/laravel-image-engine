@@ -14,9 +14,16 @@ final class Strings
      */
     public static function splitAtIndex(string $string, int $index): array
     {
+        if ($index < 0) {
+            throw new \Exception('Can not spilt a string at a negative index.');
+        }
+
         return [
             substr($string, 0, $index),
-            $part2 = substr($string, $index),
+            $index < strlen($string)
+                ? substr($string, $index)
+                : ''
+            ,
         ];
     }
 
